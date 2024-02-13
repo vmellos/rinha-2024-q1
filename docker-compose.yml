@@ -4,7 +4,7 @@ services:
   api01: &api
     # Lembre-se de que seu serviço HTTP deve estar hospedado num repositório
     # publicamente acessível! Ex.: hub.docker.com
-    image: vms/aappii:latest
+    image: vms/aappii:v1
     hostname: api01
     # environment:
     # Não é necessário expor qualquer porta além da porta do load balancer,
@@ -14,7 +14,7 @@ services:
       - "8081:8080"
     restart: always
     depends_on:
-      - db
+      - rinha_db
     deploy:
       resources:
         limits:
@@ -36,6 +36,7 @@ services:
     depends_on:
       - api01
       - api02
+      - rinha_db
     ports:
         # Obrigatório expor/usar a porta 9999 no load balancer!
       - "9999:9999" 
@@ -45,9 +46,9 @@ services:
           cpus: "0.50"
           memory: "150MB"
 
-  db:
+  rinha_db:
     image: mongo:latest
-    container_name: mongo_db
+    container_name: rinha_db
     restart: always
     ports:
       - "27017:27017"

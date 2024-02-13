@@ -31,7 +31,7 @@ type Clientes struct {
 }
 
 func NewConn(collectionName string) *mongo.Collection {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo_db:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://rinha_db:27017"))
 
 	if err != nil {
 		log.Println(err)

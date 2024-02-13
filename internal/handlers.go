@@ -57,7 +57,7 @@ func TransacaoHandler(c *fiber.Ctx) error {
 	// busca usuario
 	conn := NewConn("clientes")
 
-	filter := bson.M{"userId": id}
+	filter := bson.M{"user_id": id}
 
 	cliente := Clientes{}
 	err = conn.FindOne(context.Background(), filter).Decode(&cliente)
