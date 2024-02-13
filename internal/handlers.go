@@ -13,6 +13,34 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type Conta struct {
+	Total       int    `json:"total"`
+	Limite      int    `json:"limite"`
+	DataExtrato string `json:"data_extrato"`
+}
+
+type Transacao struct {
+	Valor     int    `json:"valor"`
+	Tipo      string `json:"tipo"`
+	Descricao string `json:"descricao"`
+}
+
+type Extrato struct {
+	Saldo struct {
+		Total       int    `json:"total"`
+		Limite      int    `json:"limite"`
+		DataExtrato string `json:"data_extrato"`
+	} `json:"saldo"`
+	UltimasTransacoes []UltimasTransacoes `json:"ultimas_transacoes"`
+}
+
+type UltimasTransacoes struct {
+	Valor       int    `json:"valor"`
+	Tipo        string `json:"tipo"`
+	Descricao   string `json:"descricao"`
+	RealizadaEm string `json:"realizada_em"`
+}
+
 func TransacaoHandler(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -89,7 +117,6 @@ func TransacaoHandler(c *fiber.Ctx) error {
 		}})
 		if err != nil {
 			log.Println(err)
-
 		}
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": cliente.Limite, "saldo": cliente.Saldo})
 	default:
