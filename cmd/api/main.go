@@ -14,8 +14,6 @@ func main() {
 	})
 
 	app.Post("/clientes/:id/transacoes", internal.TransacaoHandler)
-
 	app.Get("/clientes/:id/extrato", internal.ExtratoHandler)
-
 	log.Fatal(app.Listen(":8080"))
 }

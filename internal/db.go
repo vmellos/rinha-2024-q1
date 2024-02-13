@@ -30,7 +30,7 @@ type Clientes struct {
 	Saldo  int                `bson:"saldo"`
 }
 
-func NewConn(collectionName string) *mongo.Collection {
+func NewConn() *mongo.Database {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://rinha_db:27017"))
 
 	if err != nil {
@@ -42,7 +42,5 @@ func NewConn(collectionName string) *mongo.Collection {
 		log.Println(err)
 	}
 
-	Collection = client.Database(DatabaseName).Collection(collectionName)
-
-	return Collection
+	return client.Database(DatabaseName)
 }

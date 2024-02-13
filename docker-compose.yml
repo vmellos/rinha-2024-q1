@@ -4,7 +4,7 @@ services:
   api01: &api
     # Lembre-se de que seu serviço HTTP deve estar hospedado num repositório
     # publicamente acessível! Ex.: hub.docker.com
-    image: vms/aappii:v1
+    image: vms/aappii:latest
     hostname: api01
     # environment:
     # Não é necessário expor qualquer porta além da porta do load balancer,
@@ -18,8 +18,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.50"
-          memory: "150MB"
+          cpus: "0.60"
+          memory: "100MB"
 
   api02:
     # Essa sintaxe reusa o que foi declarado em 'api01'.
@@ -36,15 +36,14 @@ services:
     depends_on:
       - api01
       - api02
-      - rinha_db
     ports:
         # Obrigatório expor/usar a porta 9999 no load balancer!
       - "9999:9999" 
     deploy:
       resources:
         limits:
-          cpus: "0.50"
-          memory: "150MB"
+          cpus: "0.10"
+          memory: "50MB"
 
   rinha_db:
     image: mongo:latest
@@ -62,8 +61,8 @@ services:
           # aqui declarados é de 1.5 unidades de CPU e 550MB
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
-          cpus: "0.50"
-          memory: "250MB"
+          cpus: "0.20"
+          memory: "350MB"
 
 # O uso do modo `bridge` deve ser adequado à carga que será usada no teste.
 # A edição anterior se beneficiou do modo host pois o volume de requisições

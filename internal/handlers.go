@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	conn  = NewConn()
 )
 
 type Conta struct {
@@ -50,17 +55,21 @@ func TransacaoHandler(c *fiber.Ctx) error {
 		return fiber.ErrBadRequest
 	}
 
+	// Regra id valido
+	isValidId, _ := strconv.Atoi(id)
+	if isValidId > 5 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+	}
+	// Regra inteiro positivo
 	if t.Valor <= 0 {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{})
 	}
 
 	// busca usuario
-	conn := NewConn("clientes")
-
 	filter := bson.M{"user_id": id}
 
 	cliente := Clientes{}
-	err = conn.FindOne(context.Background(), filter).Decode(&cliente)
+	err = conn.Collection("clientes").FindOne(context.Background(), filter).Decode(&cliente)
 	if err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
@@ -75,16 +84,15 @@ func TransacaoHandler(c *fiber.Ctx) error {
 			Descricao:   t.Descricao,
 			RealizadaEm: primitive.NewDateTimeFromTime(time.Now()),
 		}
-		connT := NewConn("transacoes")
 
-		_, errT := connT.InsertOne(context.Background(), &transacoes)
+		_, errT := conn.Collection("transacoes").InsertOne(context.Background(), &transacoes)
 		if errT != nil {
 			log.Println(err)
 		}
 
 		cliente.Saldo += t.Valor
 
-		_, err := conn.UpdateOne(context.Background(), filter, bson.M{"$set": bson.M{"saldo": cliente.Saldo}})
+		_, err := conn.Collection("clientes").UpdateOne(context.Background(), filter, bson.M{"$set": bson.M{"saldo": cliente.Saldo}})
 		if err != nil {
 			log.Println(err)
 		}
@@ -98,9 +106,8 @@ func TransacaoHandler(c *fiber.Ctx) error {
 			Descricao:   t.Descricao,
 			RealizadaEm: primitive.NewDateTimeFromTime(time.Now()),
 		}
-		connT := NewConn("transacoes")
 
-		_, errT := connT.InsertOne(context.Background(), &transacoes)
+		_, errT := conn.Collection("transacoes").InsertOne(context.Background(), &transacoes)
 		if errT != nil {
 			log.Println(err)
 
@@ -112,7 +119,7 @@ func TransacaoHandler(c *fiber.Ctx) error {
 		}
 
 		cliente.Saldo -= t.Valor
-		_, err := conn.UpdateOne(context.Background(), filter, bson.M{"$set": bson.M{
+		_, err := conn.Collection("clientes").UpdateOne(context.Background(), filter, bson.M{"$set": bson.M{
 			"saldo": cliente.Saldo,
 		}})
 		if err != nil {
@@ -129,23 +136,20 @@ func ExtratoHandler(c *fiber.Ctx) error {
 	id := c.Params("id")
 
 	// busca conta usuario
-	conn := NewConn("clientes")
-
 	filter := bson.D{{"user_id", id}}
 
 	cliente := Clientes{}
-	err := conn.FindOne(context.Background(), filter).Decode(&cliente)
+	err := conn.Collection("clientes").FindOne(context.Background(), filter).Decode(&cliente)
 	if err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
 	}
 
-	connT := NewConn("transacoes")
 	options := options.Find()
 	options.SetSort(map[string]int{"realizada_em": -1})
 	options.SetLimit(10)
 	ctx := context.Background()
-	cursor, err := connT.Find(ctx, bson.M{}, options)
+	cursor, err := conn.Collection("transacoes").Find(ctx, bson.M{}, options)
 	if err != nil {
 		log.Println(err)
 	}
