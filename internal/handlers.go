@@ -52,16 +52,20 @@ func TransacaoHandler(c *fiber.Ctx) error {
 	var t Transacao
 	err := c.BodyParser(&t)
 	if err != nil {
-		return fiber.ErrBadRequest
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
 	}
 
 	// Regra id valido
-	isValidId, _ := strconv.Atoi(id)
+	isValidId, err := strconv.Atoi(id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+	}
+	
 	if isValidId > 5 {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
 	}
 	// Regra inteiro positivo
-	if t.Valor <= 0 {
+	if t.Valor <= 0 || t.Descricao == "" || len(t.Descricao) > 10 {
 		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{})
 	}
 

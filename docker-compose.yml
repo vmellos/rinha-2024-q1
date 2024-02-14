@@ -18,7 +18,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.60"
+          cpus: "0.45"
           memory: "100MB"
 
   api02:
@@ -43,7 +43,7 @@ services:
       resources:
         limits:
           cpus: "0.10"
-          memory: "50MB"
+          memory: "10MB"
 
   rinha_db:
     image: mongo:latest
@@ -61,8 +61,8 @@ services:
           # aqui declarados é de 1.5 unidades de CPU e 550MB
           # de memória. A distribuição feita aqui é apenas
           # um exemplo – distribua como quiser.
-          cpus: "0.20"
-          memory: "350MB"
+          cpus: "0.50"
+          memory: "390MB"
 
 # O uso do modo `bridge` deve ser adequado à carga que será usada no teste.
 # A edição anterior se beneficiou do modo host pois o volume de requisições
