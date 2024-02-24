@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	conn  = NewConn()
+	conn = NewConn()
 )
 
 type Conta struct {
@@ -52,21 +52,21 @@ func TransacaoHandler(c *fiber.Ctx) error {
 	var t Transacao
 	err := c.BodyParser(&t)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	// Regra id valido
 	isValidId, err := strconv.Atoi(id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusNotFound)
 	}
-	
+
 	if isValidId > 5 {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 	// Regra inteiro positivo
 	if t.Valor <= 0 || t.Descricao == "" || len(t.Descricao) > 10 {
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
 	// busca usuario
@@ -76,7 +76,7 @@ func TransacaoHandler(c *fiber.Ctx) error {
 	err = conn.Collection("clientes").FindOne(context.Background(), filter).Decode(&cliente)
 	if err != nil {
 		log.Println(err)
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	switch strings.ToLower(t.Tipo) {
@@ -96,10 +96,7 @@ func TransacaoHandler(c *fiber.Ctx) error {
 
 		cliente.Saldo += t.Valor
 
-		_, err := conn.Collection("clientes").UpdateOne(context.Background(), filter, bson.M{"$set": bson.M{"saldo": cliente.Saldo}})
-		if err != nil {
-			log.Println(err)
-		}
+		_ = conn.Collection("clientes").FindOneAndUpdate(context.Background(), filter, bson.M{"$set": bson.M{"saldo": cliente.Saldo}})
 
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": cliente.Limite, "saldo": cliente.Saldo})
 	case "d":
@@ -119,11 +116,11 @@ func TransacaoHandler(c *fiber.Ctx) error {
 		saldoFinal := cliente.Saldo - t.Valor
 		semLimite := (cliente.Limite + saldoFinal) < 0
 		if semLimite {
-			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{})
+			return c.SendStatus(fiber.StatusUnprocessableEntity)
 		}
 
 		cliente.Saldo -= t.Valor
-		_, err := conn.Collection("clientes").UpdateOne(context.Background(), filter, bson.M{"$set": bson.M{
+		_ = conn.Collection("clientes").FindOneAndUpdate(context.Background(), filter, bson.M{"$set": bson.M{
 			"saldo": cliente.Saldo,
 		}})
 		if err != nil {
@@ -131,7 +128,7 @@ func TransacaoHandler(c *fiber.Ctx) error {
 		}
 		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": cliente.Limite, "saldo": cliente.Saldo})
 	default:
-		return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
 
 }
@@ -146,7 +143,7 @@ func ExtratoHandler(c *fiber.Ctx) error {
 	err := conn.Collection("clientes").FindOne(context.Background(), filter).Decode(&cliente)
 	if err != nil {
 		log.Println(err)
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{})
+		return c.SendStatus(fiber.StatusNotFound)
 	}
 
 	options := options.Find()
