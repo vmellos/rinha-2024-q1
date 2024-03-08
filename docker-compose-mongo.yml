@@ -1,0 +1,12 @@
+version: "3.5"
+
+services:
+  rinha_db:
+    image: mongo:latest
+    container_name: rinha_db
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      # - mongodb_data:/data/db
+      - ./scripts:/docker-entrypoint-initdb.d

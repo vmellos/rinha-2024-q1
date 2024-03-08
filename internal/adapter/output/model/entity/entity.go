@@ -1,18 +1,6 @@
-package internal
+package entity
 
-import (
-	"context"
-	"log"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-)
-
-var (
-	Collection   *mongo.Collection
-	DatabaseName = "rinha"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Transacoes struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty"`
@@ -28,19 +16,4 @@ type Clientes struct {
 	Id     string             `bson:"user_id"`
 	Limite int                `bson:"limite"`
 	Saldo  int                `bson:"saldo"`
-}
-
-func NewConn() *mongo.Database {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://rinha_db:27017"))
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	err = client.Connect(context.Background())
-	if err != nil {
-		log.Println(err)
-	}
-
-	return client.Database(DatabaseName)
 }
