@@ -46,14 +46,24 @@ services:
           memory: "10MB"
 
   rinha_db:
-    image: mongo:latest
-    container_name: rinha_db
-    restart: always
-    ports:
-      - "27017:27017"
+    # image: mongo:latest
+    # container_name: rinha_db
+    # restart: always
+    # ports:
+    #   - "27017:27017"
+    # volumes:
+    #   # - mongodb_data:/data/db
+    #   - ./scripts:/docker-entrypoint-initdb.d
+    image: postgres:13
     volumes:
-      # - mongodb_data:/data/db
-      - ./scripts:/docker-entrypoint-initdb.d
+      - ./scripts/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-rinha}
+      POSTGRES_USER: ${DB_USER:-rinha}
+      POSTGRES_DB: ${DB_NAME:-rinha_db}
+    ports:
+      - "5422:5432"
+    restart: always
     deploy:
       resources:
         limits:

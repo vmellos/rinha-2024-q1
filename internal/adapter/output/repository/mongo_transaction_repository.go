@@ -19,7 +19,7 @@ var (
 	DatabaseName = "rinha"
 )
 
-func NewTransactionRepository(database *mongo.Database) output.TransactionPort {
+func NewTransactionMongoRepository(database *mongo.Database) output.TransactionPort {
 	return &transactionRepository{database}
 }
 
@@ -59,12 +59,6 @@ func (tr *transactionRepository) Find(clientDomain domain.ClienteDomain) []*doma
 		log.Println(err)
 	}
 
-	extrato := response.Extrato{}
-	extrato.Saldo.Limite = clientDomain.Limite
-	extrato.Saldo.Total = clientDomain.Saldo
-	extrato.Saldo.DataExtrato = time.Now().Format("2006-01-02T15:04:05.999999Z")
-	extrato.UltimasTransacoes = transacoes
-
 	// converter to domain
 	transacoesDomain := []*domain.TransactionDomain{}
 	for _, transacao := range transacoes {
@@ -90,9 +84,9 @@ func (tr *transactionRepository) Insert(transactionDomain domain.TransactionDoma
 	return &transactionDomain
 }
 
-func (tr *transactionRepository) Update(transactionDomain domain.TransactionDomain) *domain.TransactionDomain {
-	_ = tr.databaseConnection.Collection("clientes").FindOneAndUpdate(context.Background(), bson.M{"user_id": transactionDomain.UserId}, transactionDomain)
-	return &transactionDomain
+func (tr *transactionRepository) Update(clienteDomain domain.ClienteDomain) *domain.ClienteDomain {
+	_ = tr.databaseConnection.Collection("clientes").FindOneAndUpdate(context.Background(), bson.M{"user_id": clienteDomain.Id}, clienteDomain)
+	return &clienteDomain
 }
 
 func (tr *transactionRepository) GetClient(clientDomain domain.ClienteDomain) *domain.ClienteDomain {

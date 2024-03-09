@@ -40,7 +40,9 @@ func (td *transactionDomainService) TransactionHandler(c *fiber.Ctx) error {
 	if t.Valor <= 0 || t.Descricao == "" || len(t.Descricao) > 10 {
 		return c.SendStatus(fiber.StatusUnprocessableEntity)
 	}
-	cliente := domain.ClienteDomain{}
+	cliente := domain.ClienteDomain{
+		Id: id,
+	}
 	clientDomainResult := td.repository.GetClient(cliente)
 
 	if clientDomainResult == nil {
@@ -55,10 +57,10 @@ func (td *transactionDomainService) TransactionHandler(c *fiber.Ctx) error {
 			Tipo:      t.Tipo,
 			Descricao: t.Descricao,
 		}
-		cliente.Saldo += t.Valor
+		clientDomainResult.Saldo += t.Valor
 
-		_ = td.repository.Insert(transactionDomain)
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": cliente.Limite, "saldo": cliente.Saldo})
+		td.repository.Insert(transactionDomain)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": clientDomainResult.Limite, "saldo": clientDomainResult.Saldo})
 
 	case "d":
 		transactionDomain := domain.TransactionDomain{
@@ -69,16 +71,16 @@ func (td *transactionDomainService) TransactionHandler(c *fiber.Ctx) error {
 		}
 
 		td.repository.Insert(transactionDomain)
-		saldoFinal := cliente.Saldo - t.Valor
-		semLimite := (cliente.Limite + saldoFinal) < 0
+		saldoFinal := clientDomainResult.Saldo - t.Valor
+		semLimite := (clientDomainResult.Limite + saldoFinal) < 0
 		if semLimite {
 			return c.SendStatus(fiber.StatusUnprocessableEntity)
 		}
 
-		cliente.Saldo -= t.Valor
+		clientDomainResult.Saldo -= t.Valor
 
-		td.repository.Update(transactionDomain)
-		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": cliente.Limite, "saldo": cliente.Saldo})
+		td.repository.Update(*clientDomainResult)
+		return c.Status(fiber.StatusOK).JSON(fiber.Map{"limite": clientDomainResult.Limite, "saldo": clientDomainResult.Saldo})
 
 	default:
 		return c.SendStatus(fiber.StatusUnprocessableEntity)

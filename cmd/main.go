@@ -5,17 +5,21 @@ import (
 	"rinha_2024_q1/internal/adapter/input/controller"
 	"rinha_2024_q1/internal/adapter/input/controller/routes"
 	"rinha_2024_q1/internal/adapter/output/repository"
+	"rinha_2024_q1/internal/application/port/output"
 	"rinha_2024_q1/internal/application/service"
 	mongodb "rinha_2024_q1/internal/configuration/database/mongo"
+	"rinha_2024_q1/internal/configuration/database/postgres"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/mongo"
+)
+
+var (
+	repo string
 )
 
 func main() {
-	database := mongodb.NewMongoDBConnection(context.Background())
 
-	transactionController := initDependencies(database)
+	transactionController := initDependencies()
 	app := fiber.New(fiber.Config{
 		Prefork: false,
 	})
@@ -26,8 +30,25 @@ func main() {
 	}
 }
 
-func initDependencies(database *mongo.Database) controller.TransactionControllerInterface {
-	transactionRepo := repository.NewTransactionRepository(database)
+func initDependencies() controller.TransactionControllerInterface {
+	var transactionRepo output.TransactionPort
+	if repo == "mongo" {
+		transactionRepo = StartMongoRepo()
+	} else {
+		transactionRepo = StartPostgresRepo()
+	}
 	transactionService := service.NewTransactionDomainService(transactionRepo)
 	return controller.NewTransactionControllerInterface(transactionService)
+}
+
+func StartMongoRepo() output.TransactionPort {
+	database := mongodb.NewMongoDBConnection(context.Background())
+	transactionRepo := repository.NewTransactionMongoRepository(database)
+	return transactionRepo
+}
+
+func StartPostgresRepo() output.TransactionPort {
+	database, _ := postgres.OpenConn()
+	transactionRepo := repository.NewTransactionPostgresRepository(database)
+	return transactionRepo
 }
